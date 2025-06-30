@@ -145,7 +145,7 @@ func (db *DB) getPaymentByOrderUID(ctx context.Context, orderUID string) (model.
 		&payment.Bank,
 		&payment.DeliveryCost,
 		&payment.GoodsTotal,
-		&payment.CustomFee
+		&payment.CustomFee,
 	)
 
 	// логгируем и возвращаем ошибку, если таковая есть
@@ -158,11 +158,10 @@ func (db *DB) getPaymentByOrderUID(ctx context.Context, orderUID string) (model.
 }
 
 
-func (db *DB) getItemsByOrderUID(ctx context.Context, orderUID string) (model.Item, error) {
+// функция для получения items по order_uid
+// возвращаемое значение: слайс экземпляров структуры Item и ошибку, если items не найдены
+func (db *DB) getItemsByOrderUID(ctx context.Context, orderUID string) ([]model.Item, error) {
 	var items []model.Item // объявляем слайс экземпляров структуры Item
-
-	// закрываем соединение с БД
-	defer rows.Close()
 
 	// получаем основную информацию о товарах
 	rows, err := db.Pool.Query(ctx, `
@@ -171,6 +170,10 @@ func (db *DB) getItemsByOrderUID(ctx context.Context, orderUID string) (model.It
 		WHERE order_uid = $1
 	`, orderUID)
 
+	// закрываем соединение с БД
+	defer rows.Close()
+
+
 	// логгируем и возвращаем ошибку, если таковая есть
 	if err != nil {
 		log.Printf("Ошибка получения items для заказа %s: %v", orderUID, err)
@@ -178,7 +181,7 @@ func (db *DB) getItemsByOrderUID(ctx context.Context, orderUID string) (model.It
 
 	// заполняем наш слайс items полученными значениями
 	for rows.Next() {
-		var item model.item
+		var item model.Item
 		err := rows.Scan(
 			&item.ChrtID,
 			&item.TrackNumber,

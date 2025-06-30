@@ -1,14 +1,13 @@
 package db
 
-
 import (
 	"context"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"wb-tech-test/internal/model"
 )
-
 
 const (
 	dbURL = "postgres://wb_user:wb-tech-pass@localhost:5432/wb_orders" // константа для подключения к БД, решил не использовать переменные окружения поскольку это тестовый проект
@@ -60,17 +59,16 @@ func (db *DB) GetOrder(ctx context.Context, orderUID string) (model.Order, error
 	)
 
 	// логгируем и возвращаем ошибку, если таковая есть
-	if err != nil { 
+	if err != nil {
 		log.Printf("Ошибка получения заказа %s: %v", orderUID, err)
 		return order, err
 	}
 
-	delivery, err := db.getDeliveryByOrderUID(ctx, orderUID)	// получаем связанные данные о доставке
+	delivery, err := db.getDeliveryByOrderUID(ctx, orderUID) // получаем связанные данные о доставке
 	if err != nil {
 		return order, nil
 	}
-	order.Delivery = delivery	// добавляем в order полученные данные о доставке
-
+	order.Delivery = delivery // добавляем в order полученные данные о доставке
 
 	payment, err := db.getPaymentByOrderUID(ctx, orderUID) // получаем связанные данные об оплате
 	if err != nil {
@@ -84,7 +82,7 @@ func (db *DB) GetOrder(ctx context.Context, orderUID string) (model.Order, error
 	}
 
 	order.Items = items // добавляем в order полученные данные о товарах
-	
+
 	return order, nil
 
 }
@@ -157,7 +155,6 @@ func (db *DB) getPaymentByOrderUID(ctx context.Context, orderUID string) (model.
 	return payment, nil
 }
 
-
 // функция для получения items по order_uid
 // возвращаемое значение: слайс экземпляров структуры Item и ошибку, если items не найдены
 func (db *DB) getItemsByOrderUID(ctx context.Context, orderUID string) ([]model.Item, error) {
@@ -172,7 +169,6 @@ func (db *DB) getItemsByOrderUID(ctx context.Context, orderUID string) ([]model.
 
 	// закрываем соединение с БД
 	defer rows.Close()
-
 
 	// логгируем и возвращаем ошибку, если таковая есть
 	if err != nil {
@@ -219,23 +215,23 @@ func (db *DB) SaveOrder(ctx context.Context, order model.Order) error {
 	if err := db.insertDelivery(ctx, order.OrderUID, order.Delivery); err != nil {
 		return err
 	}
-	
+
 	// сохраняем payment в таблицу payment
 	if err := db.insertPayment(ctx, order.OrderUID, order.Payment); err != nil {
 		return err
 	}
-	
+
 	// сохраняем items в таблицу items
 	if err := db.insertItems(ctx, order.OrderUID, order.Items); err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
 // функция для сохранения заказа в таблицу orders
 // возвращаемое значение: ошибка, если заказ не сохранен
-func (db *DB) insertOrder(ctx context.Context, order model.Order) error { 
+func (db *DB) insertOrder(ctx context.Context, order model.Order) error {
 	_, err := db.Pool.Exec(ctx, `
 		INSERT INTO orders (order_uid, track_number, entry, locale, internal_signature, customer_id, delivery_service, shardkey, sm_id, date_created, oof_shard)
 		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
@@ -252,19 +248,19 @@ func (db *DB) insertOrder(ctx context.Context, order model.Order) error {
 	}
 	// при успешном сохранении заказа в таблице orders, логгируем сообщение
 	log.Printf("Заказ %s успешно сохранён в таблице orders", order.OrderUID)
-	
+
 	return nil
 }
 
 // функция для сохранения заказа в таблицу delivery
 // возвращаемое значение: ошибка, если заказ не сохранен
-func (db *DB) insertDelivery(ctx context.Context, orderUID string, delivery model.Delivery) error { 
-	_, err := db.Pool.Exec(ctx,`
+func (db *DB) insertDelivery(ctx context.Context, orderUID string, delivery model.Delivery) error {
+	_, err := db.Pool.Exec(ctx, `
 		INSERT INTO delivery (order_uid, name, phone, zip, city, address, region, email)
 		VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
 		ON CONFLICT (order_uid) DO NOTHING
 	`,
-	orderUID, delivery.Name, delivery.Phone, delivery.Zip, delivery.City, delivery.Address, delivery.Region, delivery.Email,
+		orderUID, delivery.Name, delivery.Phone, delivery.Zip, delivery.City, delivery.Address, delivery.Region, delivery.Email,
 	)
 
 	if err != nil {
@@ -280,13 +276,13 @@ func (db *DB) insertDelivery(ctx context.Context, orderUID string, delivery mode
 
 // функция для сохранения заказа в таблицу payment
 // возвращаемое значение: ошибка, если заказ не сохранен
-func (db *DB) insertPayment(ctx context.Context, orderUID string, payment model.Payment) error { 
+func (db *DB) insertPayment(ctx context.Context, orderUID string, payment model.Payment) error {
 	_, err := db.Pool.Exec(ctx, `
 		INSERT INTO payment (transaction, order_uid, request_id, currency, provider, amount, payment_dt, bank, delivery_cost, goods_total, custom_fee)
 		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
 		ON CONFLICT (transaction) DO NOTHING
 	`,
-	payment.Transaction, orderUID, payment.RequestID, payment.Currency, payment.Provider, payment.Amount, payment.PaymentDT, payment.Bank, payment.DeliveryCost, payment.GoodsTotal, payment.CustomFee,
+		payment.Transaction, orderUID, payment.RequestID, payment.Currency, payment.Provider, payment.Amount, payment.PaymentDT, payment.Bank, payment.DeliveryCost, payment.GoodsTotal, payment.CustomFee,
 	)
 	if err != nil {
 		// логгируем и возвращаем ошибку, если таковая есть
@@ -296,14 +292,14 @@ func (db *DB) insertPayment(ctx context.Context, orderUID string, payment model.
 
 	// при успешном сохранении payment в таблице payment, логгируем сообщение
 	log.Printf("Payment для заказа %s успешно сохранён", orderUID)
-	
+
 	return nil
 
 }
 
 // функция для сохранения заказа в таблицу items
 // возвращаемое значение: ошибка, если заказ не сохранен
-func (db *DB) insertItems(ctx context.Context, orderUID string, items []model.Item) error { 
+func (db *DB) insertItems(ctx context.Context, orderUID string, items []model.Item) error {
 	for _, item := range items {
 		_, err := db.Pool.Exec(ctx, `
 			INSERT INTO items (order_uid, chrt_id, track_number, price, rid, name, sale, size, total_price, nm_id, brand, status)
@@ -313,7 +309,7 @@ func (db *DB) insertItems(ctx context.Context, orderUID string, items []model.It
 		)
 		if err != nil {
 			// логгируем и возвращаем ошибку, если таковая есть
-		log.Printf("Ошибка сохранения items для заказа %s в таблицу items: %v", orderUID, err)
+			log.Printf("Ошибка сохранения items для заказа %s в таблицу items: %v", orderUID, err)
 			return err
 		}
 	}
@@ -328,7 +324,7 @@ func (db *DB) insertItems(ctx context.Context, orderUID string, items []model.It
 func (db *DB) GetAllOrders(ctx context.Context) ([]model.Order, error) {
 	var orders []model.Order // объявляем слайс экземпляров структуры Order
 
-	// получаем все заказы из таблицы orders	
+	// получаем все заказы из таблицы orders
 	rows, err := db.Pool.Query(ctx, `
 		SELECT order_uid FROM orders
 	`)

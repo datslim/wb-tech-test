@@ -7,6 +7,7 @@ import (
 	"wb-tech-test/internal/cache"
 	"wb-tech-test/internal/db"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -41,10 +42,10 @@ func (s *Server) getOrderByUID(w http.ResponseWriter, r *http.Request) {
 
 	order, ok := s.orderCache.Get(orderUID)
 	if !ok {
-		log.Println("Заказ не найден в кэше, запрос в БД")
+		log.Printf("Заказ %s не найден в кэше", orderUID)
 		order, err := s.database.GetOrder(r.Context(), orderUID)
 		if err != nil {
-			log.Println("Ошибка при получении заказа из БД:", err)
+			log.Printf("Заказ %s не найден в БД: %s", orderUID, err)
 			http.Error(w, "Заказ не найден", http.StatusNotFound)
 			return
 		}
@@ -59,5 +60,12 @@ func (s *Server) getOrderByUID(w http.ResponseWriter, r *http.Request) {
 
 // функция для запуска сервера
 func (s *Server) Start(addr string) error {
-	return http.ListenAndServe(addr, s.router)
+
+	// используем gorilla/handlers для разрешения заголовков CORS
+	corsHandler := handlers.CORS(
+		handlers.AllowedOrigins([]string{"*"}),                      // разрешаем все источники
+		handlers.AllowedMethods([]string{"GET", "POST", "OPTIONS"}), // разрешаем методы GET, POST, OPTIONS
+	)(s.router)
+
+	return http.ListenAndServe(addr, corsHandler)
 }

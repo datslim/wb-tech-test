@@ -42,17 +42,20 @@ func (s *Server) getOrderByUID(w http.ResponseWriter, r *http.Request) {
 
 	order, ok := s.orderCache.Get(orderUID)
 	if !ok {
-		log.Printf("Заказ %s не найден в кэше", orderUID)
+		log.Printf("Заказ %s не найден в кэше", orderUID) // логируем что заказ не найден в кэше
 		order, err := s.database.GetOrder(r.Context(), orderUID)
 		if err != nil {
-			log.Printf("Заказ %s не найден в БД: %s", orderUID, err)
-			http.Error(w, "Заказ не найден", http.StatusNotFound)
+			log.Printf("Заказ %s не найден в БД: %s", orderUID, err) // логируем ошибку если заказ не найден в БД
+			http.Error(w, "Заказ не найден", http.StatusNotFound)    // отправляем ответ о том что заказ не найден
 			return
 		}
+		log.Printf("Заказ %s найден в БД", orderUID) // логируем что заказ найден в БД
 
 		// сохраняем заказ в кэш
 		s.orderCache.Set(order)
+		log.Printf("Заказ %s сохранен в кэш", orderUID) // логируем что заказ сохранен в кэш
 	}
+	log.Printf("Заказ %s найден в кэше", orderUID) // логируем что заказ найден в кэше
 	// если заказ найден в кэше, то отправляем его в ответе
 	json.NewEncoder(w).Encode(order)
 

@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+// простой веб-сервер для отдачи статических данных от нашего API-сервера
 func Start() {
 	// Отдаём содержимое папки web/ по адресу /
 	fs := http.FileServer(http.Dir("./frontend"))

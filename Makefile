@@ -3,6 +3,8 @@ include .env
 run:
 	sudo docker compose up
 
+stop:
+	sudo docker compose down
 
 migrate-up:
 	migrate -path ./migration -database "postgres://${PG_USER}:${PG_PASS}@localhost:${PG_PORT}/${PG_DB}?sslmode=disable" up

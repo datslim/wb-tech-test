@@ -167,13 +167,13 @@ func (db *DB) getItemsByOrderUID(ctx context.Context, orderUID string) ([]model.
 		WHERE order_uid = $1
 	`, orderUID)
 
-	// закрываем соединение с БД
-	defer rows.Close()
-
 	// логгируем и возвращаем ошибку, если таковая есть
 	if err != nil {
 		log.Printf("Ошибка получения items для заказа %s: %v", orderUID, err)
 	}
+
+	// закрываем соединение с БД
+	defer rows.Close()
 
 	// заполняем наш слайс items полученными значениями
 	for rows.Next() {

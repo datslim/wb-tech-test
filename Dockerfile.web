@@ -1,0 +1,16 @@
+FROM golang:1.23.0 as builder
+
+WORKDIR /app
+COPY . .
+
+RUN go mod download
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o web-server ./cmd/webserver/main.go
+
+FROM debian:bullseye-slim
+WORKDIR /app
+COPY --from=builder /app/web-server .
+COPY frontend ./frontend
+
+ENV PORT=3000
+
+CMD ["./web-server"]

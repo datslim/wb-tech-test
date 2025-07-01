@@ -1,9 +1,9 @@
 include .env
 
-run:
+up:
 	sudo docker compose up
 
-stop:
+down:
 	sudo docker compose down
 
 migrate-up:

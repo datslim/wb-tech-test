@@ -1,6 +1,30 @@
-version: '3.8'
-
 services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: wb-api
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      PG_USER: ${PG_USER}
+      PG_PASS: ${PG_PASS}
+      PG_HOST: ${PG_HOST}
+      PG_PORT: ${PG_PORT}
+      PG_DB: ${PG_DB}
+      PORT: ${API_PORT}
+    depends_on:
+      - postgres
+    ports:
+      - ${API_PORT}:${API_PORT}
+  webserver:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    container_name: wb-webserver
+    environment:
+      PORT: ${STATIC_PORT}
+    ports:
+      - ${STATIC_PORT}:${STATIC_PORT}
   postgres:
     image: postgres:15
     container_name: wb-postgres

@@ -1,4 +1,20 @@
 services:
+  postgres:
+    image: postgres:15
+    container_name: wb-postgres
+    environment:
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASS}
+      POSTGRES_DB: ${PG_DB}
+    ports:
+      - ${PG_PORT}:${PG_PORT}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER} -d ${PG_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   api:
     build:
       context: .
@@ -13,7 +29,8 @@ services:
       PG_DB: ${PG_DB}
       PORT: ${API_PORT}
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     ports:
       - ${API_PORT}:${API_PORT}
   webserver:
@@ -25,37 +42,23 @@ services:
       PORT: ${STATIC_PORT}
     ports:
       - ${STATIC_PORT}:${STATIC_PORT}
-  postgres:
-    image: postgres:15
-    container_name: wb-postgres
-    environment:
-      POSTGRES_USER: ${PG_USER}
-      POSTGRES_PASSWORD: ${PG_PASS}
-      POSTGRES_DB: ${PG_DB}
-    ports:
-      - ${PG_PORT}:${PG_PORT}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
-  zookeeper:
-    image: bitnami/zookeeper:latest
-    container_name: wb-zookeeper
-    environment:
-      ALLOW_ANONYMOUS_LOGIN: "yes"
-
   kafka:
     image: bitnami/kafka:latest
     container_name: wb-kafka
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: wb-zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://wb-kafka:9092
+      KAFKA_CFG_NODE_ID: 1
+      KAFKA_CFG_PROCESS_ROLES: "broker,controller"
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: "1@wb-kafka:9093"
+      KAFKA_CFG_LISTENERS: "PLAINTEXT://:9092,CONTROLLER://:9093"
+      KAFKA_CFG_ADVERTISED_LISTENERS: "PLAINTEXT://wb-kafka:9092"
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_CFG_LOG_DIRS: "/bitnami/kafka/data"
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_KRAFT_CLUSTER_ID: "a868b212-508e-4a10-afe4-f68d5020daa9"
       ALLOW_PLAINTEXT_LISTENER: "yes"
     ports:
       - "9092:9092"
-    depends_on:
-      - zookeeper
-
+      - "9093:9093"
   pgadmin:
     image: dpage/pgadmin4
     container_name: wb-pgadmin

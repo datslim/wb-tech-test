@@ -10,6 +10,7 @@ FROM debian:bullseye-slim
 WORKDIR /app
 COPY --from=builder /app/web-server .
 COPY frontend ./frontend
+COPY .env .env
 
 ENV PORT=3000
 

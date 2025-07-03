@@ -35,7 +35,7 @@ func (db *DB) GetOrder(ctx context.Context, orderUID string) (model.Order, error
 
 	// логгируем и возвращаем ошибку, если таковая есть
 	if err != nil {
-		log.Printf("Ошибка получения заказа %s: %v", orderUID, err)
+		log.Printf("[DB] Ошибка получения заказа %s: %v", orderUID, err)
 		return order, err
 	}
 
@@ -87,10 +87,10 @@ func (db *DB) getDeliveryByOrderUID(ctx context.Context, orderUID string) (model
 
 	// логгируем и возвращаем ошибку, если таковая есть
 	if err != nil {
-		log.Printf("Ошибка получения delivery для заказа %s: %v", orderUID, err)
+		log.Printf("[DB] Ошибка получения delivery для заказа %s: %v", orderUID, err)
 		return delivery, err
 	}
-	log.Printf("Delivery для заказа %s успешно получен", orderUID) // логгируем сообщение об успешном получении delivery
+	log.Printf("[DB] Delivery для заказа %s успешно получен", orderUID) // логгируем сообщение об успешном получении delivery
 	return delivery, nil
 
 }
@@ -123,10 +123,10 @@ func (db *DB) getPaymentByOrderUID(ctx context.Context, orderUID string) (model.
 
 	// логгируем и возвращаем ошибку, если таковая есть
 	if err != nil {
-		log.Printf("Ошибка получения payment для заказа %s: %v", orderUID, err)
+		log.Printf("[DB] Ошибка получения payment для заказа %s: %v", orderUID, err)
 		return payment, err
 	}
-	log.Printf("Payment для заказа %s успешно получен", orderUID) // логгируем сообщение об успешном получении payment
+	log.Printf("[DB] Payment для заказа %s успешно получен", orderUID) // логгируем сообщение об успешном получении payment
 	return payment, nil
 }
 
@@ -144,7 +144,7 @@ func (db *DB) getItemsByOrderUID(ctx context.Context, orderUID string) ([]model.
 
 	// логгируем и возвращаем ошибку, если таковая есть
 	if err != nil {
-		log.Printf("Ошибка получения items для заказа %s: %v", orderUID, err)
+		log.Printf("[DB] Ошибка получения items для заказа %s: %v", orderUID, err)
 	}
 
 	// закрываем соединение с БД
@@ -169,12 +169,12 @@ func (db *DB) getItemsByOrderUID(ctx context.Context, orderUID string) ([]model.
 
 		// логгируем и возвращаем ошибку, если таковая есть
 		if err != nil {
-			log.Printf("Ошибка сканирования item для заказа %s: %v", orderUID, err)
+			log.Printf("[DB] Ошибка сканирования item для заказа %s: %v", orderUID, err)
 			return nil, err
 		}
 		items = append(items, item)
 	}
-	log.Printf("Для заказа %s найдено %d items", orderUID, len(items)) // логгируем сообщение об успешном получении items
+	log.Printf("[DB] Для заказа %s найдено %d items", orderUID, len(items)) // логгируем сообщение об успешном получении items
 	return items, nil
 }
 
@@ -197,14 +197,14 @@ func (db *DB) GetAllOrders(ctx context.Context) ([]model.Order, error) {
 		var orderUID string
 		if err := rows.Scan(&orderUID); err != nil {
 			// логгируем и возвращаем ошибку, если таковая есть
-			log.Printf("Ошибка сканирования order_uid: %v", err)
+			log.Printf("[DB] Ошибка сканирования order_uid: %v", err)
 			continue // пропускаем ошибочные заказы
 		}
 
 		order, err := db.GetOrder(ctx, orderUID)
 		if err != nil {
 			// логгируем и возвращаем ошибку, если таковая есть
-			log.Printf("Ошибка получения заказа %s: %v", orderUID, err)
+			log.Printf("[DB] Ошибка получения заказа %s: %v", orderUID, err)
 			continue // пропускаем ошибочные заказы
 		}
 		orders = append(orders, order) // добавляем в наш слайс orders полученный заказ

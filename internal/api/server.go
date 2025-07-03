@@ -49,11 +49,13 @@ func (s *Server) setupRoutes() {
 func (s *Server) handleKafkaProduce(w http.ResponseWriter, r *http.Request) {
 	var order model.Order
 	if err := json.NewDecoder(r.Body).Decode(&order); err != nil {
+		log.Printf("[API] Ошибка при декодировании JSON для отправки в Kafka: %v", err)
 		http.Error(w, "invalid json", http.StatusBadRequest)
 		return
 	}
 	msg, err := json.Marshal(order)
 	if err != nil {
+		log.Printf("[API] Ошибка при маршалинге заказа для отправки в Kafka: %v", err)
 		http.Error(w, "marshal error", http.StatusInternalServerError)
 		return
 	}
@@ -64,6 +66,7 @@ func (s *Server) handleKafkaProduce(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 	if err != nil {
+		log.Printf("[API] Ошибка при отправке заказа в Kafka: %v", err)
 		http.Error(w, "kafka error: "+err.Error(), http.StatusInternalServerError)
 		return
 	}

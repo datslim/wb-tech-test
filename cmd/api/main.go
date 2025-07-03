@@ -13,10 +13,10 @@ import (
 )
 
 func main() {
-	database := db.NewDB()
-	defer database.Pool.Close()
+	database := db.NewDB()      // создаем новый пул соединений с БД
+	defer database.Pool.Close() // закрываем пул соединений с БД
 
-	ctx := context.Background()
+	ctx := context.Background() // создаем новый контекст
 
 	orders, err := database.GetAllOrders(ctx) // получаем все заказы из БД
 	if err != nil {

@@ -25,6 +25,18 @@ func (db *DB) SaveOrder(ctx context.Context, order model.Order) error {
 		}
 	}()
 
+	// проверяем, существует ли транзакция в таблице payment
+	transactionExists, err := db.IsTransactionExists(ctx, order.Payment.Transaction)
+	if err != nil {
+		return err
+	}
+
+	// если транзакция уже существует, то возвращаем ошибку
+	if transactionExists {
+		return fmt.Errorf("[DB] Payment транзакция %s уже существует", order.Payment.Transaction)
+
+	}
+
 	// сохраняем заказ в таблицу orders
 	if err := db.insertOrder(ctx, tx, order); err != nil {
 		return err
@@ -43,16 +55,6 @@ func (db *DB) SaveOrder(ctx context.Context, order model.Order) error {
 	// сохраняем items в таблицу items
 	if err := db.insertItems(ctx, tx, order.OrderUID, order.Items); err != nil {
 		return err
-	}
-
-	transactionExists, err := db.IsTransactionExists(ctx, order.Payment.Transaction)
-	if err != nil {
-		return err
-	}
-
-	if transactionExists {
-		return fmt.Errorf("[DB] Payment транзакция %s уже существует", order.Payment.Transaction)
-
 	}
 
 	return tx.Commit(ctx)

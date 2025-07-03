@@ -1,6 +1,6 @@
 include .env
 
-up:
+run:
 	sudo docker compose up
 
 down:

@@ -31,6 +31,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      kafka:
+        condition: service_healthy
     ports:
       - ${API_PORT}:${API_PORT}
   webserver:
@@ -56,6 +58,11 @@ services:
       KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_KRAFT_CLUSTER_ID: "a868b212-508e-4a10-afe4-f68d5020daa9"
       ALLOW_PLAINTEXT_LISTENER: "yes"
+    healthcheck:
+      test: ["CMD", "kafka-topics.sh", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
     ports:
       - "9092:9092"
       - "9093:9093"

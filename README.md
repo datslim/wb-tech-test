@@ -16,7 +16,11 @@ wb-tech-test/
 │   └── webserver/    # Статический веб-сервер
 ├── frontend/         # Веб-интерфейс
 ├── migration/        # SQL миграции
+├── Makefile          # Makefile для сборки проекта
+├── .env              # Переменные окружения
 ├── docker-compose.yml
+├── Dockerfile.api
+├── Dockerfile.web
 └── README.md
 ```
 

@@ -21,7 +21,7 @@ func NewOrderCache() *OrderCache {
 
 // добавление заказа в кеш
 func (c *OrderCache) Set(order model.Order) {
-	c.mu.Lock()                     // блокируем кеш для записи
+	c.mu.Lock()                     // полностью блокируем кеш
 	defer c.mu.Unlock()             // разблокируем кеш после записи
 	c.cache[order.OrderUID] = order // добавляем заказ в кеш по ключу orderUID
 }
@@ -38,7 +38,7 @@ func (c *OrderCache) Restore(orders []model.Order) {
 // получение заказа из кеша
 // возвращаемое значение экземпляр типа Order и флаг указывающий на то, существует ли заказ в кеше или нет
 func (c *OrderCache) Get(orderUID string) (model.Order, bool) {
-	c.mu.RLock()                   // блокируем кеш для чтения
+	c.mu.RLock()                   // блокируем кеш для записи
 	defer c.mu.RUnlock()           // разблокируем кеш после чтения
 	order, ok := c.cache[orderUID] // получаем заказ из кеша по ключу orderUID
 	return order, ok               // возвращаем заказ и флаг, указывающий, существует ли заказ в кеше (1 - заказ существует, 0 - заказ не существует)
@@ -47,7 +47,7 @@ func (c *OrderCache) Get(orderUID string) (model.Order, bool) {
 // получение всех заказов из кеша
 // возвращаемое значение: слайс типа Order
 func (c *OrderCache) GetAll() []model.Order {
-	c.mu.RLock()
+	c.mu.RLock() // блокируем кеш для записи
 	defer c.mu.RUnlock()
 	orders := make([]model.Order, 0, len(c.cache))
 	for _, order := range c.cache {
